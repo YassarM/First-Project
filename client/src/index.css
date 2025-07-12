@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(to bottom, hsl(0, 84%, 50%), #ee0039);
+  /* background:linear-gradient(to bottom, #ee0039, #54091b); */
+  /* hsl(0, 72%, 54% */
+  color: #1a1a1a;
+  height: 100vh;
+  /* overflow-y: hidden; */
+}

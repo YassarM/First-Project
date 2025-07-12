@@ -1,0 +1,56 @@
+.edit-user-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 86vh;
+  padding: 0 0;
+  /* bg-gray-100 */
+}
+
+
+.edit-user-page .edit-form {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 24rem;
+  text-align: center;
+}
+.edit-form .header-user{
+  color: black;
+}
+.edit-user-page .edit-form .form-group {
+  margin-bottom: 1rem;
+  color: black;
+}
+
+.edit-user-page .edit-form .form-label {
+  display: block;
+  color: rgba(0, 0, 0, 0.776);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.edit-user-page .edit-form .form-input {
+  width: 200%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  color: black;
+  border-radius: 0.25rem;
+}
+
+.edit-user-page .edit-form .edit-user-button {
+  width: 50%;
+  background-color: #47bb04;
+  color: rgb(255, 255, 255);
+  padding: 0.5rem 0;
+  border-radius: 0.25rem;
+  font-weight: 300;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+.edit-user-page .edit-form .edit-user-button:hover{
+  background-color: #389204;
+}
