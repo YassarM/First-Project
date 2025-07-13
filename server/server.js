@@ -11,7 +11,10 @@ const saltRounds = 10;
 
 app.use(express.json());
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: [
+  "http://localhost:5173",
+  "https://first-project-gamma-wheat.vercel.app"
+],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
 }));
