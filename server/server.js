@@ -37,7 +37,8 @@ app.use(express.json());
 app.use(cors({
     origin: [
   "http://localhost:5173",
-  "https://first-project-gamma-wheat.vercel.app"
+  "https://first-project-gamma-wheat.vercel.app",
+  'www.poinix.site'
 ],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
@@ -47,22 +48,22 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 const sessionStore = new MySQLStore({
-    host: "localhost",
+    host: process.env.MYSQL_HOST,
     port: 3306,
-    user: "root", // your DB user
-    password: "", // your DB password
-    database: "kemal", // change this
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
 });
 
 app.use(session({
     key: "userid",
-    secret: "kemal",
+    secret: "poinix",
     resave: false,
     store: sessionStore,
     saveUninitialized: false,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 1 day
-        secure: false,
+        secure: true,
     },
 }));
 
