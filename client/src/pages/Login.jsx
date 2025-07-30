@@ -1,34 +1,48 @@
 import '../css/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
-import Axios from 'axios';
 import { useState } from 'react';
-
-function Login({ setUsername, setRole, setLoginStatus }) {
-  const [username, setUsernameLocal] = useState('');
+import { useAuth } from '../AuthContext';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+function Login() {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate(); // 👈 for redirection
+  const { login } = useAuth();
+
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:5000/login', {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // 👈 include cookies in the request
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
-
+      console.log(data)
       if (res.ok) {
-        // alert('✅ Login successful!');
-        setUsername(data.data.username);
-        setRole(data.data.role); // kalau kamu punya role, pastikan dikirim dari backend
-        setLoginStatus(true);
-        navigate('/'); // 👈 redirect to Home
+        login(data.data); // ✅ CALL login() from context
+
+        // Redirect based on role
+        switch (data.data.role) {
+          case 'Admin':
+            navigate('/adminPage');
+            break;
+          case 'Panitia':
+            navigate('/panitiaPage');
+            break;
+          case 'Juri':
+            navigate('/juriPage');
+            break;
+          case 'Pelatih':
+            navigate('/pelatih-page');
+            break;
+          default:
+            navigate('/');
+        }
       } else {
         alert('❌ Login failed: ' + data.error);
       }
@@ -38,26 +52,37 @@ function Login({ setUsername, setRole, setLoginStatus }) {
     }
   };
 
-
   return (
     <div className="login-container">
       <h1 className="login-title">Login Form</h1>
       <form className="login-form" onSubmit={handleLogin}>
         <div className="form-group">
           <label htmlFor="username" className="form-label">Username</label>
-          <input type="text" id="username" className="form-input" placeholder="Enter your username"
-            value={username} onChange={(e) => setUsernameLocal(e.target.value)} />
+          <input
+            type="text"
+            id="username"
+            className="form-input"
+            placeholder="Enter your username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
         </div>
         <div className="form-group">
           <label htmlFor="password" className="form-label">Password</label>
-          <input type="password" id="password" className="form-input" placeholder="Enter your password"
-            value={password} onChange={(e) => setPassword(e.target.value)} />
+          <input
+            type="password"
+            id="password"
+            className="form-input"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </div>
         <button type="submit" className="login-button">Login</button>
-        <p className='paragraph'>Doesn't have any account? <Link to="/register" className='register'
-          setUsername={setUsername}
-          setRole={setRole}
-          setLoginStatus={setLoginStatus}>Sign In</Link></p>
+        <p className="paragraph">
+          Don't have an account?{' '}
+          <Link to="/register" className="register">Sign In</Link>
+        </p>
       </form>
     </div>
   );

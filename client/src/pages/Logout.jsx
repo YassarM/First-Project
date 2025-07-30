@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext'; // adjust the path as needed
 
-function Logout({ setRole, setUsername, setLoggedInStatus }) {
+function Logout() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const logoutUser = async () => {
@@ -19,22 +21,19 @@ function Logout({ setRole, setUsername, setLoggedInStatus }) {
 
         if (response.ok) {
           setMessage('✅ You have been logged out.');
-          setRole(null);       // Reset role
-          setUsername('');     // Reset username
-          setLoggedInStatus(false); // Reset login status
-          setTimeout(() => navigate('/login'), 1500); // Redirect after 1.5 sec
+          logout(); // context logout
+          setTimeout(() => navigate('/login'), 1500); // redirect after 1.5s
         } else {
           setMessage('❌ Logout failed.');
         }
       } catch (error) {
-        
         console.error('Error during logout:', error);
         setMessage('⚠️ An error occurred while logging out.');
       }
     };
 
     logoutUser();
-  }, [navigate, setRole, setUsername]);
+  }, [logout, navigate]);
 
   return (
     <div>

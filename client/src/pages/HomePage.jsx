@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom";
+
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen text-gray-800">
       {/* Hero Section */}
       <section className="text-center py-16 px-4 bg-red-500 shadow">
         <h1 className="text-4xl font-bold mb-4">Poinix</h1>
@@ -12,7 +14,7 @@ export default function HomePage() {
       </section>
 
       {/* Keunggulan */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 bg-red-500">
         <h2 className="text-2xl font-semibold text-center mb-10">Keunggulan Sistem</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {[
@@ -32,8 +34,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Alur Sistem */}
-      <section className="py-16 bg-white px-4">
+      {/* Cara Kerja Sistem */}
+      <section className="py-16 px-4 bg-red-500">
         <h2 className="text-2xl font-semibold text-center mb-10">Cara Kerja Sistem</h2>
         <ol className="max-w-3xl mx-auto space-y-4 text-lg list-decimal list-inside">
           <li>Juri login ke sistem untuk input nilai peserta</li>
@@ -44,28 +46,30 @@ export default function HomePage() {
       </section>
 
       {/* Akses Cepat */}
-      <section className="py-12 px-4">
+      <section className="py-12 px-4 bg-red-500" >
         <h2 className="text-2xl font-semibold text-center mb-8">Akses Cepat</h2>
         <div className="flex justify-center gap-6 flex-wrap">
           {[
-            "Login sebagai Juri",
-            "Lihat Leaderboard",
-            "Registrasi Peserta",
-            "Dashboard Admin",
-          ].map((label, idx) => (
-            <button
-              key={idx}
-              className="bg-blue-500 text-white px-5 py-3 rounded-2xl shadow hover:bg-blue-600"
-            >
-              {label}
-            </button>
+            {label : "Login sebagai Juri", urlName :"/juriPage" },
+            {label : "Lihat Leaderboard", urlName : "/leaderboard" },
+            {label : "Registrasi Peserta", urlName : "/register"},
+            {label : "Dashboard Admin", urlName : "/adminPage" },
+          ].map((item, idx) => (
+
+            <Link to={item.urlName} key={idx} className="no-underline">
+              <button
+                className="bg-blue-500 text-white px-5 py-3 rounded-2xl shadow hover:bg-blue-600"
+              >
+                {item.label}
+              </button>
+            </Link>
           ))}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-sm text-gray-500">
-        &copy; 2025 Sistem Penilaian Lomba. Dibuat oleh Tim Developer.
+      <footer className="py-6 text-center text-sm text-gray-200 bg-gray-800">
+        &copy; 2025 Sistem Penilaian Lomba. Dibuat oleh Tim POINIX.
       </footer>
     </div>
   );

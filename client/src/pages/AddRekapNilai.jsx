@@ -1,13 +1,15 @@
 import CardPeserta from '../Component/CardPeserta';
 import { useEffect, useState } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 function AddRekapNilai() {
   const [pesertaData, setPesertaData] = useState([]);
   const [openCardId, setOpenCardId] = useState(null);
 
   const fetchDataPeserta = async () => {
     try {
-      const response = await fetch("http://localhost:5000/peserta", {
+      const response = await fetch(`${API_BASE_URL}/peserta`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

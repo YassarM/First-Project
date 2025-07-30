@@ -31,7 +31,7 @@ function EditUser() {
         updateUserById(id, user)
             .then(data => {
                 alert(data.message || 'User updated successfully');
-                navigate('/control');
+                navigate('/adminPage');
             })
             .catch(err => {
                 console.error('Error updating user:', err);

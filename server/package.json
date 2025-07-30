@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": " node server",
-    "dev": "nodemon server"
+    "dev": " nodemon server"
   },
   "keywords": [],
   "author": "",
@@ -16,7 +16,9 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "express-mysql-session": "^3.0.3",
     "express-session": "^1.18.1",
+    "multer": "^2.0.2",
     "mysql2": "^3.14.1",
     "parser": "^0.1.4"
   },
