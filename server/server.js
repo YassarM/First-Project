@@ -2,16 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config();
-app.use(express.json());
+
 app.use(cors({
     origin: [
-  "http://localhost:5173",
-  "https://first-project-gamma-wheat.vercel.app",
-  'https://www.poinix.site'
+  'https://www.poinix.site',
+  "http://localhost:5173"
 ],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
 }));
+app.use(express.json());
 // multer for file uploads
 const multer = require('multer');
 const path = require('path');
