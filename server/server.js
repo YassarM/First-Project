@@ -2,7 +2,16 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 require('dotenv').config();
-
+app.use(express.json());
+app.use(cors({
+    origin: [
+  "http://localhost:5173",
+  "https://first-project-gamma-wheat.vercel.app",
+  'https://www.poinix.site'
+],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true
+}));
 // multer for file uploads
 const multer = require('multer');
 const path = require('path');
@@ -33,16 +42,7 @@ const MySQLStore = require("express-mysql-session")(session);
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-app.use(express.json());
-app.use(cors({
-    origin: [
-  "http://localhost:5173",
-  "https://first-project-gamma-wheat.vercel.app",
-  'https://www.poinix.site'
-],
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: true
-}));
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
