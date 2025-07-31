@@ -38,7 +38,7 @@ app.use(cors({
     origin: [
   "http://localhost:5173",
   "https://first-project-gamma-wheat.vercel.app",
-  'www.poinix.site'
+  'https://www.poinix.site'
 ],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true
