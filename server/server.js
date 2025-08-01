@@ -3,10 +3,27 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 
+app.use(express.json());
+app.use(cors({
+    origin: [
+        "http://localhost:5173",
+        "https://first-project-gamma-wheat.vercel.app",
+        'https://www.poinix.site'
+    ],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true
+}));
+const bcrypt = require('bcrypt');
 // multer for file uploads
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const MySQLStore = require("express-mysql-session")(session);
+
 // Set up storage for multer
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
@@ -24,39 +41,24 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const MySQLStore = require("express-mysql-session")(session);
-
-const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
-app.use(express.json());
-app.use(cors({
-    origin: [
-  "http://localhost:5173",
-  "https://first-project-gamma-wheat.vercel.app"
-],
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: true
-}));
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
 const sessionStore = new MySQLStore({
-    host: "localhost",
-    port: 3306,
-    user: "root", // your DB user
-    password: "", // your DB password
-    database: "kemal", // change this
+    host: process.env.MYSQL_HOST,
+    port: process.env.MYSQL_PORT,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
 });
 
 app.use(session({
     key: "userid",
-    secret: "kemal",
+    secret: process.env.SECRET,
     resave: false,
     store: sessionStore,
     saveUninitialized: false,
@@ -68,7 +70,7 @@ app.use(session({
 
 // ✅ Gunakan mysql2/promise
 const mysql = require('mysql2/promise');
-cconst pool = mysql.createPool({
+const pool = mysql.createPool({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
@@ -494,7 +496,7 @@ app.get('/motion/kategori', async (req, res) => {
 app.patch('/motion/kategori/:id', async (req, res) => {
     const { id } = req.params;
     const { nama, prioritas } = req.body;
-    console.log('test',req.body)
+    console.log('test', req.body)
     console.log("Updating category:", id, nama.nama_kategori, prioritas);
 
     const [result] = await pool.query(`UPDATE kategori SET nama_kategori = ?, prioritas = ? WHERE id_kategori = ?`, [nama.nama_kategori, prioritas, id]);
@@ -505,13 +507,13 @@ app.patch('/motion/kategori/:id', async (req, res) => {
 
 })
 app.get('/scores', async (req, res) => {
-  try {
-    const [rows] = await pool.query("SELECT * FROM score");
-    res.json(rows);
-  } catch (err) {
-    console.error("Error ambil skor:", err);
-    res.status(500).json({ error: "Gagal ambil skor" });
-  }
+    try {
+        const [rows] = await pool.query("SELECT * FROM score");
+        res.json(rows);
+    } catch (err) {
+        console.error("Error ambil skor:", err);
+        res.status(500).json({ error: "Gagal ambil skor" });
+    }
 });
 app.delete('/motion/kategori/:id', async (req, res) => {
     const { id } = req.params;
