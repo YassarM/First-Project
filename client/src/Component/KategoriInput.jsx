@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import React from 'react';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import { useAuth } from '../AuthContext';
-import { getMotion } from '../api';
+import { postMotionByKategori } from '../api';
 
 function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
   const [items, setItems] = useState([]);
@@ -13,7 +13,7 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getMotion(id_kategori);
+      const res = await postMotionByKategori(id_kategori);
       console.log('data yang harus di nilai:',res)
       setItems(res);
     };

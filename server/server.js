@@ -3,6 +3,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 
+<<<<<<< HEAD
 app.use(express.json());
 app.use(cors({
     origin: [
@@ -14,6 +15,17 @@ app.use(cors({
     credentials: true
 }));
 const bcrypt = require('bcrypt');
+=======
+app.use(cors({
+    origin: [
+  'https://www.poinix.site',
+  "http://localhost:5173"
+],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true
+}));
+app.use(express.json());
+>>>>>>> ebdf611866809985e36b09d40b9315f057ae5de8
 // multer for file uploads
 const multer = require('multer');
 const path = require('path');
@@ -50,7 +62,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionStore = new MySQLStore({
     host: process.env.MYSQL_HOST,
+<<<<<<< HEAD
     port: process.env.MYSQL_PORT,
+=======
+    port: 3306,
+>>>>>>> ebdf611866809985e36b09d40b9315f057ae5de8
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
@@ -58,13 +74,17 @@ const sessionStore = new MySQLStore({
 
 app.use(session({
     key: "userid",
+<<<<<<< HEAD
     secret: process.env.SECRET,
+=======
+    secret: "poinix",
+>>>>>>> ebdf611866809985e36b09d40b9315f057ae5de8
     resave: false,
     store: sessionStore,
     saveUninitialized: false,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 1 day
-        secure: false,
+        secure: true,
     },
 }));
 
