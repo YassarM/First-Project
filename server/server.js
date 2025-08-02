@@ -837,9 +837,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server started on port , ${PORT}`);
-  app._router.stack.forEach(r => {
-        if (r.route && r.route.path) {
-            console.log(r.route.methods, r.route.path);
-        }
-    });
+
+  
 });
