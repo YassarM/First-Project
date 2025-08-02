@@ -5,11 +5,9 @@ app.set("trust proxy", 1);
 require('dotenv').config();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173", // local dev
-    "https://first-project-gamma-wheat.vercel.app", // Vercel preview
+  origin: 
     "https://www.poinix.site" // your domain
-  ],
+  ,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   credentials: true
 };
@@ -65,11 +63,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const sessionStore = new MySQLStore({
     host: process.env.MYSQL_HOST,
-
     port: process.env.MYSQL_PORT,
-
-    port: 3306,
-
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
@@ -835,9 +829,6 @@ app.post('/upload-logo', upload.single('logo'), (req, res) => {
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ✅ START SERVER
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server started on port , ${PORT}`);
-
-  
+app.listen(process.env.PORT, () => {
+    console.log(`Server started on port , ${process.env.PORT}`);
 });
