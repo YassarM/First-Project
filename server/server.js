@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
+app.set("trust proxy", 1); 
 require('dotenv').config();
 
 const corsOptions = {
