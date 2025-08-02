@@ -3,16 +3,18 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 
-
-app.use(express.json());app.use(cors({
+const corsOptions = {
   origin: [
-    "http://localhost:5173",
-    "https://first-project-gamma-wheat.vercel.app",
-    "https://www.poinix.site"
+    "http://localhost:5173", // local dev
+    "https://first-project-gamma-wheat.vercel.app", // Vercel preview
+    "https://www.poinix.site" // your domain
   ],
-  methods: ["GET", "POST", "PATCH", "DELETE"],
+  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+app.use(express.json());
 
 const bcrypt = require('bcrypt');
 
