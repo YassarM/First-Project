@@ -4,8 +4,7 @@ const app = express();
 require('dotenv').config();
 
 
-app.use(express.json());
-const corsOptions = {
+app.use(express.json());app.use(cors({
   origin: [
     "http://localhost:5173",
     "https://first-project-gamma-wheat.vercel.app",
@@ -13,10 +12,8 @@ const corsOptions = {
   ],
   methods: ["GET", "POST", "PATCH", "DELETE"],
   credentials: true
-};
+}));
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); 
 const bcrypt = require('bcrypt');
 
 app.use(cors({
