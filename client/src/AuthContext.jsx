@@ -10,9 +10,8 @@ export const AuthProvider = ({ children }) => {
 
 
     useEffect(() => {
-        axios.post(`${API_BASE_URL}/session`, {}, { withCredentials: true })
+        axios.get(`${API_BASE_URL}/session`, { withCredentials: true })
             .then((data) => {
-                console.log("Session data:", data);
                 if (data.data.LoggedIn) {
                     setUser(data.data.user);
                     setLoginStatus(true);

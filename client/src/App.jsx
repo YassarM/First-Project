@@ -1,6 +1,6 @@
 // App.jsx
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Suspense, lazy, useEffect  } from 'react';
 import Axios from 'axios';
 import Navbar from './Component/Navbar';
 import { useAuth } from './AuthContext';
@@ -22,12 +22,12 @@ const EditUser = lazy(() => import('./Component/EditUser'));
 const AddUser = lazy(() => import('./Component/AddUser'));
 const ProtectedRoute = lazy(() => import('./Component/ProtectiveRoute'));
 const JuriPage = lazy(() => import('./pages/JuriPage'));
-const PanitiaPage = lazy(() => import('./pages/PanitiaPage'));
 const PelatihPage = lazy(() => import('./pages/PelatihPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 
 function App() {
   const { user, loginStatus } = useAuth();
+  const navigate = useNavigate();
   Axios.defaults.withCredentials = true;
 
   useEffect(() => {
@@ -45,12 +45,17 @@ function App() {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [user]);
 
+  useEffect(() => {
+    if (!loginStatus) {
+        navigate('/login'); // atau halaman lain
+    }
+}, [loginStatus]);
+
   const renderRoleRoutes = () => {
     switch (user?.role) {
       case 'Admin':
         return (
           <>
-            <Route path="/panitiaPage" element={<PanitiaPage />} />
             <Route path='/adminPage' element={<Admin />} />
             <Route path="/juri-Page" element={<JuriPage />} />
             <Route path="/editUser/:id" element={<EditUser />} />
@@ -81,7 +86,6 @@ function App() {
       case 'Panitia':
         return (
           <>
-            <Route path="/panitiaPage" element={<PanitiaPage />} />
             <Route path='adminPage' element={<Admin />} />
             <Route path="/editUser/:id" element={<EditUser />} />
             <Route path="/addUser" element={<AddUser />} />
@@ -98,14 +102,18 @@ function App() {
           </>
         )
       default:
-        return <Route path="/" element={<HomePage />} />;
+        return (<>
+          <Route path="/" element={<HomePage />} />
+          <Route path='/login' element={<Login/>}></Route>
+          <Route path='/register' element={<SignIn/>}></Route>
+        </>
+        )
     }
   };
 
   return (
     <>
       <Navbar setLoginStatus={loginStatus} Role={user?.role} />
-      {/* {loginStatus && <h1>{user?.username} ({user?.role})</h1>} */}
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           {!loginStatus && (

@@ -14,29 +14,35 @@ function PelatihPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const pesertaRes = await axios.get(`${API_BASE_URL}/peserta/${user.id_user}`); 
-        const nilaiRes = await getNilaiPesertaById(pesertaRes.data.id_peserta); 
+        const pesertaRes = await axios.get(`${API_BASE_URL}/peserta/${user.id_user}`);
+        const nilaiRes = await getNilaiPesertaById(pesertaRes.data.id_peserta);
+
         const grouped = {};
         nilaiRes.data.forEach(item => {
           if (!grouped[item.kategori]) {
             grouped[item.kategori] = [];
           }
-          grouped[item.kategori].push({
-            label: item.motion,
-            skor: item.nilai
-          });
+
+          // Cegah duplikat manual jika diperlukan
+          if (!grouped[item.kategori].some(m => m.label === item.motion && m.skor === item.nilai)) {
+            grouped[item.kategori].push({
+              label: item.motion,
+              skor: item.nilai
+            });
+          }
         });
 
         setNilai(grouped);
         setPeserta(pesertaRes.data);
+
       } catch (err) {
         console.error("Gagal mengambil data:", err);
       }
     };
 
-    fetchData();
+    fetchData(); // Panggil hanya sekali saat mount
+  }, []); // Pastikan dependency array kosong
 
-  }, []);
 
   const toggleDropdown = (kategori) => {
     setExpanded((prev) => (prev === kategori ? null : kategori));

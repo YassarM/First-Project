@@ -2,6 +2,7 @@ import '../css/Login.css';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../AuthContext';
+import { tryLogin } from '../api';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 function Login() {
   const [username, setUsername] = useState('');
@@ -14,20 +15,11 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await res.json();
-      console.log(data)
-      if (res.ok) {
-        login(data.data); // ✅ CALL login() from context
-
+      const data = await tryLogin(username,password)
+      if (data.data.LoggedIn) {
+        login(data.data.data); // ✅ CALL login() from context
         // Redirect based on role
-        switch (data.data.role) {
+        switch (data.data.data.role) {
           case 'Admin':
             navigate('/adminPage');
             break;
@@ -35,7 +27,7 @@ function Login() {
             navigate('/panitiaPage');
             break;
           case 'Juri':
-            navigate('/juriPage');
+            navigate('/juri-page');
             break;
           case 'Pelatih':
             navigate('/pelatih-page');

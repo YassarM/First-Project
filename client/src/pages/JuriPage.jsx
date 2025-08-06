@@ -13,7 +13,6 @@ function JuriPage() {
     const fetchDataPeserta = async () => {
         try {
             const response = await dataPeserta();
-            console.log("Peserta data fetched:", response.data);
             setPesertaData(response.data);
         } catch (error) {
             console.error("Error fetching peserta data:", error);

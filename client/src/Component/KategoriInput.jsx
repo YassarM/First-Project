@@ -14,8 +14,7 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
   useEffect(() => {
     const fetchData = async () => {
       const res = await postMotionByKategori(id_kategori);
-      console.log('data yang harus di nilai:',res)
-      setItems(res);
+      setItems(res.data);
     };
     fetchData();
   }, [id_kategori]);
@@ -53,7 +52,6 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
     // Semua valid
     if (onSubmit) {
 
-      // console.log("User data:",user)
       const payload = Object.entries(selectedScores).map(([key, nilai]) => {
         const [id, id_score] = key.split('-');
         return {
@@ -63,7 +61,6 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
           id_peserta: id_peserta,
         };
       });
-      console.log(payload)
       onSubmit(payload);
     }
   };

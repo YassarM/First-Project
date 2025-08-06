@@ -1,33 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-app.set("trust proxy", 1); 
-require('dotenv').config();
 
-const corsOptions = {
-  origin: 
-    "https://www.poinix.site" // your domain
-  ,
-  methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-  credentials: true
-};
-
-app.use(cors(corsOptions));
-app.use(express.json());
 
 const bcrypt = require('bcrypt');
-
-app.use(cors({
-    origin: [
-  'https://www.poinix.site',
-  "http://localhost:5173"
-],
-    methods: ["GET", "POST", "PATCH", "DELETE"],
-    credentials: true
-}));
-app.use(express.json());
-
-// multer for file uploads
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -36,6 +12,21 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const MySQLStore = require("express-mysql-session")(session);
+
+require('dotenv').config();
+const corsOptions = {
+    origin: process.env.DOMAIN,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true,
+};
+
+
+app.set("trust proxy", 1); // trust Railway/Render/Vercel
+app.use(cors(corsOptions)); // Automatically handles OPTIONS!
+app.use(express.json());
+
+
+
 
 // Set up storage for multer
 const uploadDir = path.join(__dirname, 'uploads');
@@ -57,7 +48,7 @@ const upload = multer({ storage });
 const saltRounds = 10;
 
 
-app.use(cookieParser());
+app.use(cookieParser(process.env.SECRET));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
@@ -70,18 +61,15 @@ const sessionStore = new MySQLStore({
 });
 
 app.use(session({
-    key: "userid",
-
+    name: "PHPSESSID",
     secret: process.env.SECRET,
-
-    secret: "poinix",
-
     resave: false,
     store: sessionStore,
     saveUninitialized: false,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 1 day
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-site cookies in production
     },
 }));
 
@@ -96,6 +84,10 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0
 });
+
+app.get('/', (req, res) => {
+    res.send("Welcome to Poinix API");
+})
 
 app.post('/user/:id/active', express.text(), async (req, res) => {
     const { id } = req.params;
@@ -131,7 +123,6 @@ app.post('/user/:id/active', express.text(), async (req, res) => {
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
     const role = req.body.role?.trim() || 'Guest';
-    console.log("Registering user:", username, "Role:", role);
     let conn;
     if (username === null || password === null) {
         return res.status(400).json({ error: "⚠️ Username or Password cannot be empty!" })
@@ -151,8 +142,6 @@ app.post("/register", async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
         const [idRole] = await pool.query(`SELECT id_roles FROM roles WHERE role = ?`, [role])
-        // console.log("Connected to database for registration");
-        console.log(idRole[0].id_roles)
         // ✅ Simpan user
         const [userResult] = await conn.query(
             `INSERT INTO users(username, password, id_role) VALUES (?, ?, ?)`,
@@ -162,7 +151,7 @@ app.post("/register", async (req, res) => {
             `SELECT * FROM users WHERE id_user = ?`,
             [userResult.insertId]
         );
-        res.json({ message: "✅ User Registered Successfully", user: newUser[0] });
+        res.json({ message: "✅ User Registered Successfully", user: newUser[0], success: true });
         if (!res.ok) return { success: false, message: data.message || "Registration failed" };
         return { success: true, data, user: newUser[0] };
     } catch (error) {
@@ -254,7 +243,6 @@ app.post('/register-asjur', async (req, res) => {
 // ✅ LOGIN
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
-    console.log(req.body)
     let conn;
     try {
         conn = await pool.getConnection();
@@ -279,9 +267,18 @@ app.post("/login", async (req, res) => {
         }
 
         await conn.query(`UPDATE users SET status = "Active" WHERE id_user = ?`, [user.id_user]);
-        req.session.user = user;
-        console.log(user)
-        res.json({ message: "✅ Login successful", data: user, LoggedIn: true });
+        req.session.user = {
+            id_user: user.id_user,
+            username: user.username,
+            role: user.role,
+        };
+        req.session.save((err) => {
+            if (err) {
+                console.error("❌ Session save error:", err);
+                return res.status(500).json({ error: "Failed to save session" });
+            }
+            res.json({ message: "✅ Login successful", data: req.session.user, LoggedIn: true });
+        });
     } catch (err) {
         console.error("❌ Login Error:", err);
         res.json({ LoggedIn: false })
@@ -298,7 +295,6 @@ app.post('/logout', async (req, res) => {
         try {
             const conn = await pool.getConnection();
             await conn.query(`UPDATE users SET status = "Inactive" WHERE id_user = ?`, [user.id_user]);
-            console.log("Successfully Log out")
             conn.release();
         } catch (err) {
             console.error("❌ Error setting inactive:", err.message);
@@ -313,12 +309,10 @@ app.post('/logout', async (req, res) => {
 });
 
 // ✅ CEK SESSION
-app.post("/session", (req, res) => {
+app.get("/session", (req, res) => {
     if (req.session.user) {
-        // console.log(req.session.user)
         res.json({ LoggedIn: true, user: req.session.user });
     } else {
-        // console.log(req.session.user)
         res.json({ LoggedIn: false });
     }
 });
@@ -336,6 +330,7 @@ app.get('/users', async (req, res) => {
             u.date
              FROM users u
              JOIN roles r ON u.id_role = r.id_roles`);
+
         res.json(results);
         conn.release();
     } catch (err) {
@@ -405,7 +400,6 @@ app.get('/user-role-juri', async (req, res) => {
         const [result] = await pool.query(`SELECT * FROM users WHERE id_role = ?`, [roleId])
         res.json(result)
     } catch (err) {
-        console.log(err)
     }
 })
 
@@ -415,12 +409,9 @@ app.post('/status/:id', async (req, res) => {
     const { user_id } = req.body
     try {
         const [results] = await pool.query(`SELECT status FROM graded WHERE id_peserta = ? AND id_juri = ?`, [id, user_id]);
-        // console.log(results)
         if (results.length === 0) {
-            console.log("Peserta not found");
             return res.status(404).json({ error: "Peserta not found" });
         }
-        console.log("Status peserta:", results[0].status);
         res.json({ status: results[0].status });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -430,18 +421,14 @@ app.post('/status/:id', async (req, res) => {
 // ✅ POST PBB MURNI
 app.post('/motion-input', async (req, res) => {
     const data = req.body;
-
     try {
         for (const row of data) {
             const { id, id_score, label, nilai, id_kategori } = row;
-            console.log("Row data:", row);
             if (id) {
                 // Update
                 await pool.query(`UPDATE motion SET motion = ? WHERE id_motion = ?`, [label, id]);
                 await pool.query(`UPDATE score SET \`1st\` = ?, \`2nd\` = ?, \`3th\` = ?, \`4th\` = ?, \`5th\` = ? WHERE id_score = ?`, [...nilai, id_score]);
             } else {
-                console.log("Insert mode");
-                console.log("Inserting score:", nilai);
                 // Insert baru
                 const [scoreResult] = await pool.query(`INSERT INTO score (\`1st\`, \`2nd\`, \`3th\`, \`4th\`, \`5th\`) VALUES (?, ?, ?, ?, ?)`, nilai);
                 const newScoreId = scoreResult.insertId;
@@ -457,9 +444,7 @@ app.post('/motion-input', async (req, res) => {
     }
 });
 app.post('/motion', async (req, res) => {
-    const id_kategori = req.body.data
-    console.log(req.body)
-    console.log("id kategori:", req.body.data)
+    const {id_kategori} = req.body
     try {
 
         const [rows] = await pool.query(`
@@ -492,7 +477,6 @@ app.post('/motion', async (req, res) => {
                 row.nilai_5
             ]
         }));
-        console.log("Result:", result)
         res.json(result);
     } catch (err) {
         console.error('❌ Error ambil data:', err);
@@ -501,8 +485,7 @@ app.post('/motion', async (req, res) => {
 });
 app.get('/motion/kategori', async (req, res) => {
     try {
-        const [rows] = await pool.query(`SELECT * FROM kategori`);
-        console.log("Kategori yang diambil:", rows);
+        const [rows] = await pool.query(`SELECT * FROM kategori ORDER BY prioritas ASC `);
 
         res.json(rows);
     } catch (err) {
@@ -510,19 +493,86 @@ app.get('/motion/kategori', async (req, res) => {
         res.status(500).json({ error: 'Gagal ambil kategori' });
     }
 });
+app.get('/motion/all', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`SELECT
+            m.id_motion AS id,
+            m.id_score,
+            m.id_kategori,
+            m.motion,
+            s.\`1st\` AS nilai_1,
+            s.\`2nd\` AS nilai_2,
+            s.\`3th\` AS nilai_3,
+            s.\`4th\` AS nilai_4,
+            s.\`5th\` AS nilai_5,   
+            k.nama_kategori AS kategori
+        FROM motion m
+        JOIN score s ON m.id_score = s.id_score
+        JOIN kategori k ON m.id_kategori = k.id_kategori`);
+        const result = rows.map((row) => ({
+            id: row.id,
+            id_score: row.id_score,
+            motion: row.motion,
+            id_kategori: row.id_kategori,
+            kategori: row.kategori,
+            nilai: [
+                row.nilai_1,
+                row.nilai_2,
+                row.nilai_3,
+                row.nilai_4,
+                row.nilai_5
+            ]
+        }));
+        res.json(result);
+    } catch (err) {
+        console.error('❌ Error ambil semua motion:', err);
+        res.status(500).json({ error: 'Gagal ambil semua motion' });
+    }
+});
+app.patch('/motion/update/:id', async (req, res) => {
+    const { id } = req.params;
+    const { motion, id_kategori, id_score } = req.body;
+
+    try {
+        await pool.query(`UPDATE motion SET motion = ?, id_kategori = ?, id_score = ? WHERE id_motion = ?`, [motion, id_kategori, id_score, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error("❌ Error updating motion:", err);
+        res.status(500).json({ error: 'Gagal memperbarui motion' });
+    }
+});
 app.patch('/motion/kategori/:id', async (req, res) => {
     const { id } = req.params;
     const { nama, prioritas } = req.body;
-    console.log('test', req.body)
-    console.log("Updating category:", id, nama.nama_kategori, prioritas);
 
-    const [result] = await pool.query(`UPDATE kategori SET nama_kategori = ?, prioritas = ? WHERE id_kategori = ?`, [nama.nama_kategori, prioritas, id]);
+    const [result] = await pool.query(`UPDATE kategori SET nama_kategori = ?, prioritas = ? WHERE id_kategori = ?`, [nama, prioritas, id]);
     if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Kategori tidak ditemukan' });
     }
     res.json({ success: true, message: 'Kategori berhasil diperbarui' });
 
 })
+app.patch('/motion/score/:id', async (req, res) => {
+    const { id } = req.params;
+    const { scores } = req.body;
+
+
+    try {
+        // Update the score in the database
+        await pool.query(`
+  UPDATE score 
+  SET \`1st\` = ?, \`2nd\` = ?, \`3th\` = ?, \`4th\` = ?, \`5th\` = ?
+  WHERE id_score = (
+    SELECT id_score FROM motion WHERE id_motion = ?
+  )
+`, [scores.s1, scores.s2, scores.s3, scores.s4, scores.s5, id]);
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("❌ Error updating scores:", err);
+        res.status(500).json({ error: 'Gagal memperbarui skor' });
+    }
+});
 app.get('/scores', async (req, res) => {
     try {
         const [rows] = await pool.query("SELECT * FROM score");
@@ -532,9 +582,10 @@ app.get('/scores', async (req, res) => {
         res.status(500).json({ error: "Gagal ambil skor" });
     }
 });
-app.delete('/motion/kategori/:id', async (req, res) => {
+app.delete('/motion/delete/kategori/:id', async (req, res) => {
     const { id } = req.params;
-    console.log("Deleting category:", id);
+    await pool.query(`DELETE FROM score WHERE id_score IN (SELECT id_score FROM motion WHERE id_kategori = ?)`, [id]);
+    await pool.query(`DELETE FROM motion WHERE id_kategori = ?`, [id]);
     const [result] = await pool.query(`DELETE FROM kategori WHERE id_kategori = ?`, [id]);
     if (result.affectedRows === 0) {
         return res.status(404).json({ error: 'Kategori tidak ditemukan' });
@@ -562,7 +613,6 @@ app.delete('/motion-delete/:id', async (req, res) => {
 
 app.post('/motion/tambah/kategori', async (req, res) => {
     const { nama_kategori, prioritas } = req.body;
-    console.log("Adding category:", nama_kategori, "with priority:", prioritas);
     try {
         const [result] = await pool.query(`INSERT INTO kategori (nama_kategori, prioritas) VALUES (?, ?)`, [nama_kategori, prioritas]);
         res.json({ id_kategori: result.insertId, nama_kategori, prioritas });
@@ -571,12 +621,24 @@ app.post('/motion/tambah/kategori', async (req, res) => {
         res.status(500).json({ error: 'Gagal tambah kategori' });
     }
 })
+app.post('/kategori/add', async (req, res) => {
+    const { nama_kategori, prioritas } = req.body;
+    try {
+        await pool.query(
+            'INSERT INTO kategori (nama_kategori, prioritas) VALUES (?, ?)',
+            [nama_kategori, prioritas]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error tambah kategori:', err);
+        res.status(500).json({ error: 'Gagal tambah kategori' });
+    }
+});
 
 // Grading status
 app.patch('/grading-status/:id', async (req, res) => {
     const { id } = req.params;
     const { id_juri } = req.body;
-    console.log(id, id_juri)
     await pool.query("UPDATE graded SET status = 'Graded' WHERE id_peserta = ? AND id_juri = ?", [id, id_juri]);
     res.json({ success: true });
 
@@ -590,7 +652,6 @@ app.post('/input-nilai', async (req, res) => {
 
         for (const scoring of nilaiArray) {
             const { id_peserta, id_data, id_juri, nilai } = scoring;
-            console.log(id_peserta, id_data, id_juri, nilai)
             await conn.query(
                 `INSERT INTO nilai ( id_peserta, id_juri, id_motion ,nilai)
                  VALUES (?, ?, ?, ?)
@@ -614,7 +675,6 @@ app.post('/input-nilai', async (req, res) => {
 app.post('/ungraded/:id', async (req, res) => {
     const id = req.params.id
     const user_id = req.body.user_id
-    // console.log("test",id, user_id)
     try {
         const [existing] = await pool.query(
             `SELECT * FROM graded WHERE id_peserta = ? AND id_juri = ?`,
@@ -638,7 +698,6 @@ app.post('/ungraded/:id', async (req, res) => {
 app.post('/peserta/:id/note', async (req, res) => {
     const { id } = req.params; // peserta id
     const { note, id_user } = req.body; // id_user = asisten
-
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
@@ -663,7 +722,6 @@ app.post('/peserta/:id/note', async (req, res) => {
         }
         const [idJuri] = await conn.query(`
     SELECT id_juri FROM asisten WHERE id_asisten_juri = ?`, [id_user])
-        console.log('Id Juri:', idJuri)
         await conn.query(`UPDATE graded SET status = 'Locked' WHERE id_peserta = ? AND id_juri = ?`, [id, idJuri[0].id_juri])
         await conn.commit();
         res.json({ success: true, message: 'Note saved successfully' });
@@ -687,7 +745,6 @@ app.get('/all-pelatih', async (req, res) => {
              FROM users u
              JOIN roles r ON u.id_role = r.id_roles
              WHERE r.role = 'Pelatih'`);
-        console.log("Fetched pelatih:", results);
         res.json(results);
     } catch (err) {
         console.error("❌ Error fetching pelatih:", err);
@@ -759,7 +816,6 @@ app.delete('/peserta/:id', async (req, res) => {
 });
 
 app.post('/input-peserta', async (req, res) => {
-    console.log("Peserta data received:", req.body);
     const pesertaList = req.body;
     for (const peserta of pesertaList) {
         const { id_peserta, nama_peserta, sekolah, logo, id_pelatih } = peserta;
@@ -809,7 +865,6 @@ app.get('/nilai/peserta/:id', async (req, res) => {
             JOIN kategori k ON m.id_kategori = k.id_kategori
             WHERE n.id_peserta = ?
         `, [id]);
-        console.log("Nilai peserta:", rows);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -819,16 +874,30 @@ app.get('/nilai/peserta/:id', async (req, res) => {
 // Endpoint upload logo
 app.post('/upload-logo', upload.single('logo'), (req, res) => {
     const filename = req.file.filename;
-    console.log("Logo uploaded:", filename);
     res.json({
         success: true,
         filePath: `${req.file.filename}`
     });
 });
 
+app.patch('motion/kategori/:id/prioritas', async (req, res) => {
+    const { id } = req.params;
+    const { prioritas } = req.body;
+    try {
+        const [result] = await pool.query(`UPDATE kategori SET prioritas = ? WHERE id_kategori = ?`, [prioritas, id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Kategori tidak ditemukan' });
+        }
+        res.json({ success: true, message: 'Prioritas berhasil diperbarui' });
+    } catch (err) {
+        console.error("❌ Error updating priority:", err);
+        res.status(500).json({ error: 'Gagal memperbarui prioritas' });
+    }
+});
+
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // ✅ START SERVER
-app.listen(process.env.PORT, () => {
-    console.log(`Server started on port , ${process.env.PORT}`);
+app.listen(process.env.PORT || 3000, () => {
+    // Delay a bit to ensure all routes are loaded
 });

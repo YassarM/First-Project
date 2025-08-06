@@ -22,7 +22,6 @@ function CardPeserta({ peserta }) {
         idJuri = res.data[0].id_juri; // ambil id juri dari asjur
       }
       const data = await statusPeserta(peserta.id_peserta, idJuri);
-      console.log("Status peserta:", data.data.status);
       setStatus(data.data.status); // 'ungraded', 'graded', 'noted', 'locked'
     };
     fetchStatus();

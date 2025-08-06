@@ -13,7 +13,6 @@ function Signin({ setUsername, setRole, setLoginStatus }) {
         e.preventDefault();
         const response = await registerUser({ username, role, password });
         if (!response.success) {
-            // alert(`Error: ${response.message}`);
             setUsernameTaken(true);
         }
         alert(response.data.user.username + " has been registered successfully");
