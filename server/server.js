@@ -15,7 +15,7 @@ const MySQLStore = require("express-mysql-session")(session);
 
 require('dotenv').config();
 const corsOptions = {
-    origin: "https://www.poinix.site",
+    origin: process.env.DOMAIN || "https://www.poinix.site",
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
 };
