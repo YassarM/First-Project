@@ -1,11 +1,11 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import KategoriInput from "../Component/KategoriInput";
 import { useState, useEffect } from 'react';
-import { gradedJuri, submitNilaiToServer, getKategori } from '../api';
+import { gradedJuri, submitNilaiToServer, getKategoriByJuri, getkategoriControl } from '../api';
 import { useAuth } from '../AuthContext';
 
 function InputNilai() {
-    const { id } = useParams();
+    const { id, event } = useParams();
     const [step, setStep] = useState(1);
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -19,9 +19,9 @@ function InputNilai() {
     
     useEffect(() => {
         const fetchKategori = async () => {
-            const res = await getKategori();
-            setKategori(res.data);
-            console.log("Kategori yang diambil:", Kategori);
+            const res = await getkategoriControl(user.id_user);
+            setKategori(res.data.data);
+            console.log('Fetched Kategori:', res.data.data);
         }
         fetchKategori();
     }, []);
@@ -30,8 +30,9 @@ function InputNilai() {
         if (pendingData) {
             await submitNilaiToServer(pendingData);
             if (isLastStep) {
+                console.log('last step')
                 await gradedJuri(id, user.id_user);
-                navigate('/juri-page');
+                navigate(event+'/juri-page');
             } else {
                 setStep(prev => prev + 1);
             }
@@ -63,8 +64,8 @@ function InputNilai() {
         <div className="max-w-3xl mx-auto py-8">
             {Kategori.length > 0 && step <= Kategori.length && (
                 <KategoriInput
-                    id_kategori={Kategori[step - 1].id_kategori}
-                    title={Kategori[step - 1].nama_kategori}
+                    id_kategori={Kategori[step - 1].id}
+                    title={Kategori[step - 1].kategori}
                     onSubmit={step === Kategori.length ? handleLast : handleNext}
                     id_peserta={Number(id)}
                 />

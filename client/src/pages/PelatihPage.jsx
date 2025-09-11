@@ -51,10 +51,10 @@ function PelatihPage() {
   if (!peserta) return <div className="p-4">Memuat data peserta...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow rounded-lg">
+    <div className="max-w-3xl mx-auto p-6 bg-red-500 shadow rounded-lg">
       <div className="flex items-center gap-4 mb-6">
         <img
-          src={`${API_BASE_URL}${peserta.logo}`}
+          src={`${API_BASE_URL}${peserta.path}`}
           alt="Logo"
           className="w-16 h-16 rounded-full bg-gray-200 object-cover"
         />

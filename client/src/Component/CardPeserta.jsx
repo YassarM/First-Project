@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { data, useNavigate } from 'react-router-dom';
-import { useAuth } from '../AuthContext'; // assuming you have a context
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import { statusPeserta, ungradedStatus, getJuriByAsjur, inputNotesAsjur } from '../api';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function CardPeserta({ peserta }) {
   const [status, setStatus] = useState('loading');
@@ -12,7 +11,7 @@ function CardPeserta({ peserta }) {
   const [showNote, setShowNote] = useState(false);
   const [asjur, setAsjur] = useState([]);
   const [note, setNote] = useState('');
-
+  const { event } = useParams()
   useEffect(() => {
     const fetchStatus = async () => {
       let idJuri = user.id_user;
@@ -31,7 +30,7 @@ function CardPeserta({ peserta }) {
     try {
       const res = await inputNotesAsjur(peserta.id_peserta, note, user.id_user);
 
-      if(res.data) alert('Catatan berhasil disimpan!');
+      if (res.data) alert('Catatan berhasil disimpan!');
       setShowNote(false);
       setStatus('Locked')
     } catch (err) {
@@ -43,7 +42,7 @@ function CardPeserta({ peserta }) {
 
   const handleClick = () => {
     if (role === 'Juri' && status === 'Ungraded') {
-      navigate(`/grade/${peserta.id_peserta}`);
+      navigate(`/${event}/grade/${peserta.id_peserta}`);
     } else if (role === 'Asjur' && status === 'Graded') {
       setShowNote(prev => !prev);
     }
@@ -51,7 +50,7 @@ function CardPeserta({ peserta }) {
 
   const getStatusText = (id) => {
     switch (status) {
-      case 'Ungraded': return 'Tap untuk nilai';
+      case 'Ungraded': return role === 'Juri' ? 'Tap untuk nilai' :' Belum Dinilai';
       case 'Graded': return role === 'Asjur' ? 'Tap untuk beri catatan' : 'Sudah Dinilai ✅';
       case 'Locked': return '✅ Terkunci';
       default: {
@@ -73,7 +72,7 @@ function CardPeserta({ peserta }) {
           src={
             peserta.logo?.startsWith('http')
               ? peserta.logo
-              : `${API_BASE_URL}${peserta.logo}`
+              : `${import.meta.env.VITE_API_BASE_URL}${peserta.logo}`
           }
           alt="logo"
           className="w-10 h-10 rounded-full bg-white p-1"

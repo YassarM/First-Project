@@ -1,18 +1,18 @@
-import CardPeserta from '../Component/CardPeserta';
+import CardPeserta from '../Component/CardPeserta.jsx';
 import { useEffect, useState } from 'react';
 
 import { dataPeserta } from '../api.js'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { useParams } from 'react-router-dom';
 
 function JuriPage() {
     const [pesertaData, setPesertaData] = useState([]);
     const [openCardId, setOpenCardId] = useState(null);
-
+    const { event } = useParams()
 
     const fetchDataPeserta = async () => {
         try {
-            const response = await dataPeserta();
+            const response = await dataPeserta(event);
+            console.log(response.data);
             setPesertaData(response.data);
         } catch (error) {
             console.error("Error fetching peserta data:", error);

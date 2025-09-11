@@ -1,76 +1,91 @@
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Circle } from "lucide-react";
+import logo from "../assets/half_logo.png"
+export default function Admin() {
+  const API_BASE_URL = "http://localhost:3000";
+  const [slides, setSlides] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [events, setEvents] = useState([]);
 
-export default function HomePage() {
+  useEffect(() => {
+    // sementara buat 1 slide real + 2 dummy
+    const dummySlides = [
+      { id: 1, text: "Selamat datang di Event Besar Tahun Ini!" },
+      { id: 2, text: "System Penilaian Digital Lomba LKBB" },
+      { id: 3, text: "Slide Dummy Ketiga - Pantau terus!" }
+    ];
+    setSlides(dummySlides);
+
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/all-events`);
+      setEvents(res.data);
+    } catch (err) {
+      console.error("Gagal fetch events:", err);
+    }
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+  };
+
   return (
-    <div className="min-h-screen text-gray-800">
-      {/* Hero Section */}
-      <section className="text-center py-16 px-4 bg-red-500 shadow">
-        <h1 className="text-4xl font-bold mb-4">Poinix</h1>
-        <p className="text-lg mb-6">Cepat, Terintegrasi, Efisien, dan Modern</p>
-        <div className="flex justify-center gap-4">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded-2xl shadow hover:bg-blue-700">Login</button>
-          <button className="bg-gray-200 px-6 py-2 rounded-2xl shadow hover:bg-gray-300">Lihat Leaderboard</button>
-        </div>
-      </section>
+    <div className="bg-black min-h-screen text-white   flex">
+      {/* === Kiri: Logo + Slide === */}
+      {/* Logo burung merah-orange */}
 
-      {/* Keunggulan */}
-      <section className="py-16 px-4 bg-red-500">
-        <h2 className="text-2xl font-semibold text-center mb-10">Keunggulan Sistem</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {[
-            { title: "Cepat", desc: "Akses dan input nilai secara real-time." },
-            { title: "Terintegrasi", desc: "Seluruh data peserta, juri, dan nilai terkoneksi dalam satu sistem." },
-            { title: "Efisien", desc: "Alur kerja yang minim klik dan jelas." },
-            { title: "Modern", desc: "Desain yang responsif dan bersih untuk semua perangkat." },
-          ].map((item, idx) => (
+      <div className="absolute items-center ml-0 mb-5 mt-10 z-10 ">
+        <img
+          src={logo}
+          alt="Logo"
+          className="w-85 object-cover items-end"
+        />
+      </div>
+      <div className="flex-1 p-5">
+        {/* Slide Section */}
+        <div className="relative bg-gradient-to-br from-orange-500 to-red-500 rounded-xl h-128 ml-5 flex flex-col items-center justify-center">
+          <div className="flex ">
+            <p className="text-4xl font-semibold px-4 text-center justify-item-end">
+              {slides[currentSlide]?.text}
+            </p>
+          </div>
+          {/* Dots indikator */}
+          <div className="absolute bottom-3 flex space-x-2">
+            {slides.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToSlide(i)}
+                className={`w-3 h-3 rounded-full transition-all ${currentSlide === i ? "bg-white" : "bg-gray-400"
+                  }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* === Kanan: Daftar Event === */}
+      <div className="w-64 ml-6">
+        <h2 className="text-lg font-bold mb-3">Semua Event</h2>
+        <div className="space-y-3">
+          {events.map((ev) => (
             <div
-              key={idx}
-              className="bg-white p-6 rounded-2xl shadow text-center border hover:shadow-lg transition"
+              key={ev.id_event}
+              className="bg-gradient-to-br to-orange-500 from-red-500 p-3 rounded-lg flex flex-col"
             >
-              <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-              <p className="text-gray-600">{item.desc}</p>
+              <span className="font-semibold">{ev.nama_event}</span>
+              <span className="text-sm text-gray-400">{ev.status}</span>
             </div>
           ))}
         </div>
-      </section>
-
-      {/* Cara Kerja Sistem */}
-      <section className="py-16 px-4 bg-red-500">
-        <h2 className="text-2xl font-semibold text-center mb-10">Cara Kerja Sistem</h2>
-        <ol className="max-w-3xl mx-auto space-y-4 text-lg list-decimal list-inside">
-          <li>Juri login ke sistem untuk input nilai peserta</li>
-          <li>Sistem otomatis rekap seluruh nilai</li>
-          <li>Leaderboard dan rekap nilai ter-update real-time</li>
-          <li>Panitia dan pelatih dapat memantau hasil kapan saja</li>
-        </ol>
-      </section>
-
-      {/* Akses Cepat */}
-      <section className="py-12 px-4 bg-red-500" >
-        <h2 className="text-2xl font-semibold text-center mb-8">Akses Cepat</h2>
-        <div className="flex justify-center gap-6 flex-wrap">
-          {[
-            {label : "Login sebagai Juri", urlName :"/juriPage" },
-            {label : "Lihat Leaderboard", urlName : "/leaderboard" },
-            {label : "Registrasi Peserta", urlName : "/register"},
-            {label : "Dashboard Admin", urlName : "/adminPage" },
-          ].map((item, idx) => (
-
-            <Link to={item.urlName} key={idx} className="no-underline">
-              <button
-                className="bg-blue-500 text-white px-5 py-3 rounded-2xl shadow hover:bg-blue-600"
-              >
-                {item.label}
-              </button>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-sm text-gray-200 bg-gray-800">
-        &copy; 2025 Sistem Penilaian Lomba. Dibuat oleh Tim POINIX.
-      </footer>
+      </div>
     </div>
   );
 }

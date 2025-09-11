@@ -1,5 +1,4 @@
 
-import '../css/ContactPerson.css';
 function ContactPerson() {
   return (
     <div className="ContactPerson-page">

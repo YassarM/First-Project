@@ -8,10 +8,13 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState({});
     const [loginStatus, setLoginStatus] = useState(false);
 
-
     useEffect(() => {
-        axios.get(`${API_BASE_URL}/session`, { withCredentials: true })
-            .then((data) => {
+        axios.get(`${API_BASE_URL}/session`, { withCredentials: true }).then(res =>{
+            if (!res.ok) {
+                return new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })  .then((data) => {
                 if (data.data.LoggedIn) {
                     setUser(data.data.user);
                     setLoginStatus(true);
@@ -31,13 +34,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        await axios.post(`${API_BASE_URL}/logout`, { withCredentials: true });  
+        await axios.post(`${API_BASE_URL}/logout`, { withCredentials: true });
         setUser(null);
         setLoginStatus(false);
     };
     return (
         <AuthContext.Provider value={{ user, loginStatus, login, logout, setUser, setLoginStatus }}>
-
             {children}
         </AuthContext.Provider>
     );

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import React from 'react';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import { useAuth } from '../AuthContext';
-import { postMotionByKategori } from '../api';
+import {  getMotionByKategori } from '../api';
 
 function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
   const [items, setItems] = useState([]);
@@ -13,8 +13,15 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await postMotionByKategori(id_kategori);
-      setItems(res.data);
+      console.log('Id:',id_kategori)
+      const res = await getMotionByKategori(id_kategori);
+      const formatted = res.data.data.map(item => ({
+      ...item,
+      nilai: [item.nilai_1, item.nilai_2, item.nilai_3, item.nilai_4, item.nilai_5].filter(Boolean)
+    }));
+
+    console.log('kategori Kontrol formatted:', formatted)
+    setItems(formatted);
     };
     fetchData();
   }, [id_kategori]);
@@ -56,11 +63,12 @@ function KategoriInput({ id_kategori, title, onSubmit, id_peserta }) {
         const [id, id_score] = key.split('-');
         return {
           id_data: parseInt(id),
-          nilai,
+          nilai: Number(nilai),
           id_juri: user.id_user,
           id_peserta: id_peserta,
         };
       });
+      console.log('Submitting payload:', payload);
       onSubmit(payload);
     }
   };

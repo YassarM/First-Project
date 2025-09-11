@@ -1,130 +1,147 @@
-import React, { useEffect, useState } from 'react';
-import { postMotionByKategori, postTambahMotion } from '../api';
+import { useState } from "react";
+import { Minus, Plus } from "lucide-react";
 
-const MotionPopup = ({ idKategori, onClose, namaKategori }) => {
-  const [motions, setMotions] = useState([]);
-  const [message, setMessage] = useState('');
-  const fecthMotion = async () => postMotionByKategori({ data: idKategori })
-    .then(res => setMotions(res.data))
-    .catch(err => {
-      console.error('Gagal ambil data motion:', err);
-      alert('Gagal ambil data motion');
-    });
+export default function MotionPopup({ motion, onClose, onSave, id_kategori }) {
+  const [localMotion, setLocalMotion] = useState(motion || []);
 
-  useEffect(() => {
-    if (idKategori) {
-      fecthMotion()
-    }
+  const scoreFields = [
+    { key: "nilai_1", label: "1st" },
+    { key: "nilai_2", label: "2nd" },
+    { key: "nilai_3", label: "3th" },
+    { key: "nilai_4", label: "4th" },
+    { key: "nilai_5", label: "5th" },
+  ];
 
-  }, [idKategori]);
-
+  // edit motion / skor
   const handleChange = (index, field, value) => {
-    const updated = [...motions];
-    if (field === 'label') updated[index].motion = value;
-    else updated[index].nilai[field] = value;
-    setMotions(updated);
+    const updated = [...localMotion];
+    updated[index] = { ...updated[index], [field]: value };
+    setLocalMotion(updated);
   };
 
+  // hapus motion
+  const handleRemove = (index) => {
+    const updated = localMotion.filter((_, i) => i !== index);
+    setLocalMotion(updated);
+  };
+
+  // tambah motion baru
   const handleAdd = () => {
-    setMotions([
-      ...motions,
-      {
-        id: null,
-        id_score: null,
-        motion: '',
-        id_kategori: idKategori,
-        nilai: ['', '', '', '', ''],
-      },
-    ]);
+    const idKategori = localMotion[0].id_kategori
+    console.log('localMotion:',localMotion)
+    const newMotion = {
+      id: Date.now(), // sementara unique id lokal
+      motion: "",
+      nilai_1: "",
+      nilai_2: "",
+      nilai_3: "",
+      nilai_4: "",
+      nilai_5: "",
+      id_kategori: idKategori
+    };
+    setLocalMotion([...localMotion, newMotion]);
   };
 
-  const handleDelete = (index) => {
-    const updated = [...motions];
-    updated.splice(index, 1);
-    setMotions(updated);
+  const handleSave = () => {
+    const payload = localMotion.map(item => ({
+      motion: item.motion,
+      nilai: [
+        Number(item.nilai_1) || 0,
+        Number(item.nilai_2) || 0,
+        Number(item.nilai_3) || 0,
+        Number(item.nilai_4) || 0,
+        Number(item.nilai_5) || 0
+      ],
+      id_kategori: item.id_kategori
+    }));
+
+    onSave(payload);
+    onClose();
   };
 
-  const handleSave = async () => {
-    try {
-      const formatted = motions.map((m) => ({
-        id: m.id,
-        id_score: m.id_score,
-        label: m.motion,
-        nilai: m.nilai,
-        id_kategori: m.id_kategori,
-      }));
-      console.log('Saving motions:', formatted);
-      await postTambahMotion(formatted)
-      fecthMotion();
-      setMessage('Data berhasil disimpan!');
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-      console.error(err);
-      alert('Gagal simpan data');
-    }
-  };
+
+  if (!motion) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl relative">
-        <h2 className="text-xl font-bold mb-4">Motion untuk {namaKategori}</h2>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gradient-to-br from-orange-600 to-orange-400 p-6 rounded-2xl shadow-lg w-[600px] max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <h2 className="text-white text-lg font-semibold text-center mb-4">
+          Motion Control
+        </h2>
 
-        {message && (
-          <div className="mb-4 px-4 py-2 bg-green-100 text-green-700 border border-green-300 rounded">
-            {message}
-          </div>
-        )}
-
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-          {motions.length === 0 ?<p>No Motion</p>:(motions.map((motion, index) => (
-            <div key={index} className="border p-4 rounded bg-gray-50">
-              <div className="flex items-center gap-2 mb-2">
-                <label className="w-20">Motion:</label>
-                <input
-                  value={motion.motion}
-                  onChange={(e) => handleChange(index, 'label', e.target.value)}
-                  className="flex-1 border p-1 rounded"
-                />
+        {/* Daftar Motion */}
+        <div className="space-y-4 mb-6">
+          {localMotion.map((item, index) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-lg p-3 shadow flex flex-col gap-2"
+            >
+              {/* Header Motion + Delete */}
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleDelete(index)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
+                  onClick={() => handleRemove(index)}
+                  className="cursor-pointer bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center"
                 >
-                  Hapus
+                  <Minus size={16} />
                 </button>
+
+                <input
+                  type="text"
+                  value={item.motion}
+                  onChange={(e) =>
+                    handleChange(index, "motion", e.target.value)
+                  }
+                  className="flex-1 px-2 py-1 border rounded text-black"
+                  placeholder="Nama Motion"
+                />
               </div>
+
+              {/* Input skor */}
               <div className="grid grid-cols-5 gap-2">
-                {motion.nilai.map((n, i) => (
+                {scoreFields.map((sf) => (
                   <input
-                    key={i}
+                    key={sf.key}
                     type="number"
-                    value={n}
-                    onChange={(e) => handleChange(index, i, e.target.value)}
-                    className="border p-1 rounded text-center"
-                    placeholder={`Nilai ${i + 1}`}
+                    value={item[sf.key] ?? ""}
+                    onChange={(e) =>
+                      handleChange(index, sf.key, e.target.value)
+                    }
+                    min={0}
+                    max={100}
+                    className="w-full px-2 py-1 border rounded text-center text-black"
+                    placeholder={sf.label}
                   />
                 ))}
               </div>
             </div>
-          )))}
-
+          ))}
         </div>
 
-        <div className="flex justify-between items-center mt-4">
-          <button onClick={handleAdd} className="bg-blue-500 text-white px-3 py-1 rounded">
-            + Tambah Motion
+        {/* Tambah Motion */}
+        <button
+          onClick={handleAdd}
+          className="cursor-pointer w-full bg-white text-black py-2 rounded-lg mb-6 flex items-center justify-center"
+        >
+          <Plus size={20} className="mr-2" /> Tambah Motion
+        </button>
+
+        {/* Save / Cancel */}
+        <div className="flex justify-center space-x-4">
+          <button
+            onClick={handleSave}
+            className="bg-white text-orange-600 hover:bg-gray-300 font-semibold px-6 py-2 rounded-full cursor-pointer"
+          >
+            Save
           </button>
-          <div className="flex gap-2">
-            <button onClick={onClose} className="bg-gray-300 px-4 py-1 rounded">
-              Tutup
-            </button>
-            <button onClick={handleSave} className="bg-green-600 text-white px-4 py-1 rounded">
-              Simpan
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="bg-red-600 text-white hover:bg-red-700 font-semibold px-6 py-2 rounded-full cursor-pointer"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default MotionPopup;
+}
